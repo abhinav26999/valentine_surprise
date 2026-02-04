@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { encodeData } from "../utils/encode";
 import Valentine from "./Valentine";
 
@@ -7,6 +7,20 @@ export default function Home() {
     const [from, setFrom] = useState("");
     const [link, setLink] = useState("");
     const [copied, setCopied] = useState(false);
+    const [visits, setVisits] = useState(0);
+    const [nameHistory, setNameHistory] = useState([]);
+
+    useEffect(() => {
+        try {
+            const count = Number(localStorage.getItem("site_visits") || 0) + 1;
+            localStorage.setItem("site_visits", count);
+            setVisits(count);
+
+            const savedNames = JSON.parse(localStorage.getItem("name_history") || "[]");
+            setNameHistory(savedNames);
+        } catch {}
+    }, []);
+
 
     const generate = async () => {
         if (!to.trim()) return alert("Enter partner name");
@@ -15,8 +29,6 @@ export default function Home() {
         const generatedLink = `${window.location.origin}/v/${code}`;
 
         setLink(generatedLink);
-
-        // 🔥 AUTO COPY
         try {
             await navigator.clipboard.writeText(generatedLink);
             setCopied(true);
@@ -24,6 +36,16 @@ export default function Home() {
         } catch {
             setCopied(false);
         }
+        try {
+            const savedNames = JSON.parse(localStorage.getItem("name_history") || "[]");
+
+            if (!savedNames.includes(to)) {
+                const updated = [to, ...savedNames].slice(0, 10); // keep last 10
+                localStorage.setItem("name_history", JSON.stringify(updated));
+                setNameHistory(updated);
+            }
+        } catch {}
+
     };
 
     return (
@@ -34,6 +56,33 @@ export default function Home() {
                 <h1 className="text-4xl font-extrabold mb-6">
                     Make a Viral Valentine 💖
                 </h1>
+
+                {/* 👀 Visitor Count */}
+                <p className="mb-6 text-sm text-gray-600">
+                    👀 Users visited this website:{" "}
+                    <span className="font-semibold text-pink-600">
+            {visits}
+          </span>
+                    {nameHistory.length > 0 && (
+                        <div className="mb-4">
+                            <p className="text-xs text-gray-500 mb-1">
+                                💕 Recently used names
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                                {nameHistory.map((name, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={() => setTo(name)}
+                                        className="px-3 py-1 text-xs rounded-full bg-white border text-gray-700 hover:bg-pink-50 transition"
+                                    >
+                                        {name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                </p>
 
                 <input
                     placeholder="Crush / Partner name 💕"
@@ -59,17 +108,37 @@ export default function Home() {
                             className="w-full p-3 rounded bg-white text-sm"
                         />
 
-                        {/* ✅ COPY FEEDBACK */}
                         <p className="mt-2 text-sm font-semibold text-pink-600">
                             {copied ? "Copied! 😈💖" : "Tap to copy 👆"}
                         </p>
 
-                        {/* 🔥 CTA */}
                         <p className="mt-4 text-lg font-bold text-gray-700">
                             👉 Send this to your crush 😏
                         </p>
                     </div>
                 )}
+
+                {/* Creator credit */}
+                <p className="mt-10 text-xs text-gray-500 opacity-70">
+                    This site is created by{" "}
+                    <span className="font-semibold text-gray-600">
+    Abhinav Aryan
+  </span>{" "}
+                    — Full Stack Developer
+                </p>
+
+                <p className="mt-1 text-xs text-gray-500 opacity-70">
+                    This is my portfolio, you can go through it 👉{" "}
+                    <a
+                        href="https://abhinav-portfollio.netlify.app/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold text-pink-600 hover:underline"
+                    >
+                        Visit
+                    </a>
+                </p>
+
             </div>
 
             {/* RIGHT (LIVE PREVIEW) */}
