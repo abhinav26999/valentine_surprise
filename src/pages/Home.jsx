@@ -6,11 +6,24 @@ export default function Home() {
     const [to, setTo] = useState("");
     const [from, setFrom] = useState("");
     const [link, setLink] = useState("");
+    const [copied, setCopied] = useState(false);
 
-    const generate = () => {
+    const generate = async () => {
         if (!to.trim()) return alert("Enter partner name");
+
         const code = encodeData({ to, from });
-        setLink(`${window.location.origin}/v/${code}`);
+        const generatedLink = `${window.location.origin}/v/${code}`;
+
+        setLink(generatedLink);
+
+        // 🔥 AUTO COPY
+        try {
+            await navigator.clipboard.writeText(generatedLink);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            setCopied(false);
+        }
     };
 
     return (
@@ -23,34 +36,47 @@ export default function Home() {
                 </h1>
 
                 <input
-                    placeholder="Partner name"
+                    placeholder="Crush / Partner name 💕"
                     value={to}
                     onChange={e => setTo(e.target.value)}
                     className="mb-3 p-3 rounded border"
                 />
+
                 <button
                     onClick={generate}
-                    className="bg-pink-500 text-white py-3 rounded-full font-bold"
+                    className="bg-pink-500 text-white py-3 rounded-full font-bold hover:scale-105 transition"
                 >
                     Generate Link 🔗
                 </button>
 
                 {link && (
-                    <div className="mt-6">
-                        <p className="text-sm mb-2">Your link:</p>
+                    <div className="mt-6 animate-pop">
+                        <p className="text-sm mb-2 opacity-70">Your link:</p>
+
                         <input
                             value={link}
                             readOnly
-                            className="w-full p-3 rounded bg-white"
+                            className="w-full p-3 rounded bg-white text-sm"
                         />
+
+                        {/* ✅ COPY FEEDBACK */}
+                        <p className="mt-2 text-sm font-semibold text-pink-600">
+                            {copied ? "Copied! 😈💖" : "Tap to copy 👆"}
+                        </p>
+
+                        {/* 🔥 CTA */}
+                        <p className="mt-4 text-lg font-bold text-gray-700">
+                            👉 Send this to your crush 😏
+                        </p>
                     </div>
                 )}
             </div>
 
             {/* RIGHT (LIVE PREVIEW) */}
             <div className="relative overflow-hidden">
-                <Valentine preview to={to || "Your Partner"} from={from} />
+                <Valentine preview to={to || "Your Crush"} from={from} />
             </div>
+
         </div>
     );
 }
