@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { encodeData } from "../utils/encode";
 import Valentine from "./Valentine";
 
@@ -7,28 +7,21 @@ export default function Home() {
     const [from, setFrom] = useState("");
     const [link, setLink] = useState("");
     const [copied, setCopied] = useState(false);
-    const [visits, setVisits] = useState(0);
-    const [nameHistory, setNameHistory] = useState([]);
-
-    useEffect(() => {
-        try {
-            const count = Number(localStorage.getItem("site_visits") || 0) + 1;
-            localStorage.setItem("site_visits", count);
-            setVisits(count);
-
-            const savedNames = JSON.parse(localStorage.getItem("name_history") || "[]");
-            setNameHistory(savedNames);
-        } catch {}
-    }, []);
-
 
     const generate = async () => {
-        if (!to.trim()) return alert("Enter partner name");
+        if (!to.trim()) {
+            alert("Enter partner name");
+            return;
+        }
+
+        // ✅ Save name ONLY when generating
+        localStorage.setItem("last_to_name", to);
 
         const code = encodeData({ to, from });
         const generatedLink = `${window.location.origin}/v/${code}`;
 
         setLink(generatedLink);
+
         try {
             await navigator.clipboard.writeText(generatedLink);
             setCopied(true);
@@ -36,58 +29,20 @@ export default function Home() {
         } catch {
             setCopied(false);
         }
-        try {
-            const savedNames = JSON.parse(localStorage.getItem("name_history") || "[]");
-
-            if (!savedNames.includes(to)) {
-                const updated = [to, ...savedNames].slice(0, 10); // keep last 10
-                localStorage.setItem("name_history", JSON.stringify(updated));
-                setNameHistory(updated);
-            }
-        } catch {}
-
     };
 
     return (
         <div className="min-h-screen grid md:grid-cols-2">
-
             {/* LEFT */}
             <div className="p-10 flex flex-col justify-center bg-pink-100">
                 <h1 className="text-4xl font-extrabold mb-6">
                     Make a Viral Valentine 💖
                 </h1>
 
-                {/* 👀 Visitor Count */}
-                <p className="mb-6 text-sm text-gray-600">
-                    👀 Users visited this website:{" "}
-                    <span className="font-semibold text-pink-600">
-            {visits}
-          </span>
-                    {nameHistory.length > 0 && (
-                        <div className="mb-4">
-                            <p className="text-xs text-gray-500 mb-1">
-                                💕 Recently used names
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                                {nameHistory.map((name, i) => (
-                                    <button
-                                        key={i}
-                                        onClick={() => setTo(name)}
-                                        className="px-3 py-1 text-xs rounded-full bg-white border text-gray-700 hover:bg-pink-50 transition"
-                                    >
-                                        {name}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                </p>
-
                 <input
                     placeholder="Crush / Partner name 💕"
                     value={to}
-                    onChange={e => setTo(e.target.value)}
+                    onChange={(e) => setTo(e.target.value)}
                     className="mb-3 p-3 rounded border"
                 />
 
@@ -118,12 +73,20 @@ export default function Home() {
                     </div>
                 )}
 
+                {/* 💝 Valentine Week CTA */}
+                <a
+                    href="/valentine-week"
+                    className="mt-8 inline-block text-center bg-red-500 text-white px-6 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition shadow-lg animate-pulse"
+                >
+                    💝 Open Valentine Week Surprise
+                </a>
+
                 {/* Creator credit */}
                 <p className="mt-10 text-xs text-gray-500 opacity-70">
                     This site is created by{" "}
                     <span className="font-semibold text-gray-600">
-    Abhinav Aryan
-  </span>{" "}
+            Abhinav Aryan
+          </span>{" "}
                     — Full Stack Developer
                 </p>
 
@@ -138,14 +101,12 @@ export default function Home() {
                         Visit
                     </a>
                 </p>
-
             </div>
 
             {/* RIGHT (LIVE PREVIEW) */}
             <div className="relative overflow-hidden">
                 <Valentine preview to={to || "Your Crush"} from={from} />
             </div>
-
         </div>
     );
 }
